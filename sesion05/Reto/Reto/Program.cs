@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq; // Necesario para FirstOrDefault, Any, Sum
+using System.Linq; 
 
 namespace Reto
 {
     public record LineaVenta(string Codigo, string Nombre, int Cantidad, decimal Subtotal);
 
-    // Record para el nivel extra (Factura/Recibo)
     public record Factura(int Numero, DateTime Fecha, List<LineaVenta> Lineas, decimal Total);
     internal class Program
     {
-        // Base de datos en memoria (Inventario y Carrito)
         static List<Producto> inventario = new List<Producto>
         {
             new Producto("P01", "Teclado Mecánico", 150000m, 10),
@@ -18,8 +16,12 @@ namespace Reto
             new Producto("P03", "Monitor 24 pulgadas", 600000m, 5)
         };
 
+        // 2. Carrito de Compras
         static List<LineaVenta> carrito = new List<LineaVenta>();
         static int contadorFactura = 1;
+
+        // 3. Cuenta Bancaria del Cliente (Ejemplo con $500,000 iniciales)
+        static CuentaBancaria cuentaCliente = new CuentaBancaria("Melany Cardona", "123-456-789", 500000m);
 
         static void Main(string[] args)
         {
@@ -28,14 +30,19 @@ namespace Reto
             while (!salir)
             {
                 Console.Clear();
-                Console.WriteLine("=== SISTEMA DE GESTIÓN DE INVENTARIO Y VENTAS ===");
+                Console.WriteLine("==================================================");
+                Console.WriteLine("    SISTEMA DE GESTIÓN DE INVENTARIO Y VENTAS     ");
+                Console.WriteLine("==================================================");
+                Console.WriteLine($" CLIENTE: {cuentaCliente.Titular} | SALDO: ${cuentaCliente.Saldo:N2}");
+                Console.WriteLine("--------------------------------------------------");
                 Console.WriteLine("1. Registrar producto");
                 Console.WriteLine("2. Agregar stock");
                 Console.WriteLine("3. Vender (Agregar al carrito)");
                 Console.WriteLine("4. Ver carrito y Total (LINQ)");
                 Console.WriteLine("5. Ver inventario");
-                Console.WriteLine("6. Confirmar compra (Generar Factura)");
-                Console.WriteLine("7. Salir");
+                Console.WriteLine("6. Confirmar compra (Pagar con Cuenta Bancaria)");
+                Console.WriteLine("7. Recargar Saldo de Cuenta");
+                Console.WriteLine("8. Salir");
                 Console.Write("Selecciona una opción: ");
 
                 string opcion = Console.ReadLine();
@@ -47,8 +54,9 @@ namespace Reto
                     case "3": RealizarVenta(); break;
                     case "4": MostrarCarrito(); break;
                     case "5": MostrarInventario(); break;
-                    case "6": ConfirmarCompra(); break;
-                    case "7": salir = true; break;
+                    case "6": ConfirmarCompraYPagar(); break;
+                    case "7": RecargarSaldo(); break;
+                    case "8": salir = true; break;
                     default: Console.WriteLine("Opción no válida."); break;
                 }
 
@@ -68,7 +76,6 @@ namespace Reto
                 Console.Write("Código: ");
                 string codigo = Console.ReadLine().Trim();
 
-                // Pista: Validar que el código no exista previamente
                 if (inventario.Any(p => p.Codigo.Equals(codigo, StringComparison.OrdinalIgnoreCase)))
                 {
                     Console.WriteLine(" Error: Ya existe un producto con ese código.");
@@ -84,14 +91,12 @@ namespace Reto
                 Console.Write("Stock inicial: ");
                 int stock = int.Parse(Console.ReadLine());
 
-                // Al instanciar se ejecutan las validaciones del constructor y propiedades
                 Producto nuevo = new Producto(codigo, nombre, precio, stock);
                 inventario.Add(nuevo);
                 Console.WriteLine(" Producto registrado con éxito.");
             }
             catch (Exception ex)
             {
-                // Muestra el mensaje de error sin cerrar el programa
                 Console.WriteLine($" Error al registrar: {ex.Message}");
             }
         }
@@ -102,7 +107,6 @@ namespace Reto
             Console.Write("Ingresa el código del producto: ");
             string codigo = Console.ReadLine().Trim();
 
-            // Pista: Buscar con FirstOrDefault
             var producto = inventario.FirstOrDefault(p => p.Codigo.Equals(codigo, StringComparison.OrdinalIgnoreCase));
 
             if (producto == null)
@@ -173,7 +177,6 @@ namespace Reto
                 Console.WriteLine($"[{item.Codigo}] {item.Nombre} x{item.Cantidad} - Subtotal: ${item.Subtotal:N2}");
             }
 
-            // Pista: Calcular total con LINQ Sum
             decimal total = carrito.Sum(l => l.Subtotal);
             Console.WriteLine($"-----------------------------------");
             Console.WriteLine($"TOTAL A PAGAR: ${total:N2}");
@@ -188,32 +191,73 @@ namespace Reto
             }
         }
 
-        static void ConfirmarCompra()
+        // INTEGRACIÓN DE CUENTA BANCARIA CON LA COMPRA
+        static void ConfirmarCompraYPagar()
         {
             if (!carrito.Any())
             {
-                Console.WriteLine("No hay productos en el carrito para facturar.");
+                Console.WriteLine(" No hay productos en el carrito para procesar el pago.");
                 return;
             }
 
-            decimal total = carrito.Sum(l => l.Subtotal);
-            Factura factura = new Factura(contadorFactura++, DateTime.Now, new List<LineaVenta>(carrito), total);
+            decimal totalPagar = carrito.Sum(l => l.Subtotal);
 
-            Console.Clear();
-            Console.WriteLine("========================================");
-            Console.WriteLine($"           RECIBO DE COMPRA #{factura.Numero:D4}");
-            Console.WriteLine($"Fecha: {factura.Fecha:dd/MM/yyyy HH:mm:ss}");
-            Console.WriteLine("========================================");
-            foreach (var l in factura.Lineas)
+            Console.WriteLine($"\nTotal de la compra: ${totalPagar:N2}");
+            Console.WriteLine($"Saldo disponible en cuenta: ${cuentaCliente.Saldo:N2}");
+
+            // Intentamos debitar de la cuenta bancaria
+            if (cuentaCliente.Retirar(totalPagar))
             {
-                Console.WriteLine($"{l.Nombre,-20} x{l.Cantidad,-3} ${l.Subtotal,10:N2}");
-            }
-            Console.WriteLine("----------------------------------------");
-            Console.WriteLine($"TOTAL: ${factura.Total,29:N2}");
-            Console.WriteLine("========================================");
+                // Pago exitoso -> Generamos la Factura
+                Factura factura = new Factura(contadorFactura++, DateTime.Now, new List<LineaVenta>(carrito), totalPagar);
 
-            // Vaciamos el carrito tras confirmar la compra
-            carrito.Clear();
+                Console.Clear();
+                Console.WriteLine("========================================");
+                Console.WriteLine("       ¡PAGO REALIZADO CON ÉXITO!       ");
+                Console.WriteLine($"           RECIBO DE COMPRA #{factura.Numero:D4}");
+                Console.WriteLine($"Fecha: {factura.Fecha:dd/MM/yyyy HH:mm:ss}");
+                Console.WriteLine($"Cliente: {cuentaCliente.Titular}");
+                Console.WriteLine($"Cuenta debitada: {cuentaCliente.Numero}");
+                Console.WriteLine("========================================");
+                foreach (var l in factura.Lineas)
+                {
+                    Console.WriteLine($"{l.Nombre,-20} x{l.Cantidad,-3} ${l.Subtotal,10:N2}");
+                }
+                Console.WriteLine("----------------------------------------");
+                Console.WriteLine($"TOTAL PAGADO: ${factura.Total,23:N2}");
+                Console.WriteLine($"SALDO RESTANTE: ${cuentaCliente.Saldo,21:N2}");
+                Console.WriteLine("========================================");
+
+                carrito.Clear(); // Limpiamos el carrito solo cuando el pago es exitoso
+            }
+            else
+            {
+                Console.WriteLine("\n PAGO RECHAZADO: Saldo insuficiente en la cuenta bancaria.");
+                Console.WriteLine("Recarga tu saldo desde la opción 7 o modifica tu carrito.");
+            }
         }
+
+        static void RecargarSaldo()
+        {
+            Console.WriteLine("\n--- RECARGAR SALDO EN CUENTA ---");
+            Console.Write("Monto a depositar: ");
+
+            if (decimal.TryParse(Console.ReadLine(), out decimal monto))
+            {
+                if (cuentaCliente.Depositar(monto))
+                {
+                    Console.WriteLine($" Recarga exitosa. Nuevo saldo: ${cuentaCliente.Saldo:N2}");
+                }
+                else
+                {
+                    Console.WriteLine(" El monto ingresado debe ser mayor que $0.");
+                }
+            }
+            else
+            {
+                Console.WriteLine(" Monto no válido.");
+            }
+        
+    }
     }
 }

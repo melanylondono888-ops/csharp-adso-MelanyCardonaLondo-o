@@ -5,14 +5,14 @@ using System.Text;
 namespace Reto
 {
     internal class Producto
-    {// Campos privados para las validaciones
+    {
         private string _nombre;
         private decimal _precio;
 
-        // Auto-propiedad para el Código (mayúsculas obligatorias)
+        
         public string Codigo { get; private set; }
 
-        // Propiedad Nombre (no vacío)
+        
         public string Nombre
         {
             get => _nombre;
