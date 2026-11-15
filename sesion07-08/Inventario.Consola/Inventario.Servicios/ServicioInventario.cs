@@ -63,5 +63,25 @@ namespace Inventario.Servicios
 
         public List<Producto> StockBajo() =>
             _productos.Where(p => p.Cantidad < LimiteStockBajo).ToList();
+
+        /// <summary>Productos cuyo nombre o código contengan el texto (sin importar mayúsculas).</summary>
+        public List<Producto> BuscarPorTexto(string texto) =>
+            _productos
+                .Where(p => p.Nombre.Contains(texto, StringComparison.OrdinalIgnoreCase)
+                         || p.Codigo.Contains(texto, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+        /// <summary>Elimina el producto con ese código y guarda. Si no existe, no hace nada.</summary>
+        public void Eliminar(string codigo)
+        {
+            var producto = Buscar(codigo);
+            if (producto is null)
+                return;
+
+            _productos.Remove(producto);
+            _repositorio.Guardar(_productos);
+        }
     }
+
+
 }

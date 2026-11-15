@@ -30,8 +30,10 @@ while (!salir)
         case "3": Vender(); break;
         case "4": VerInventario(); break;
         case "5": VerStockBajo(); break;
-        case "6": salir = true; break;
-        default: Console.WriteLine("Opción no válida. Elige un número del 1 al 6."); break;
+        case "6": Buscar(); break;
+        case "7": Eliminar(); break;
+        case "8": salir = true; break;
+        default: Console.WriteLine("Opción no válida. Elige un número del 1 al 8."); break;
     }
 }
 
@@ -48,7 +50,9 @@ void MostrarMenu()
     Console.WriteLine("3. Vender");
     Console.WriteLine("4. Ver inventario");
     Console.WriteLine("5. Ver stock bajo (menos de 5)");
-    Console.WriteLine("6. Salir");
+    Console.WriteLine("6. Buscar por texto");
+    Console.WriteLine("7. Eliminar producto");
+    Console.WriteLine("8. Salir");
     Console.Write("Opción: ");
 }
 
@@ -116,6 +120,51 @@ void VerStockBajo()
         return;
     }
     Imprimir(bajos);
+}
+
+void Buscar()
+{
+    string texto = LeerTexto("Texto a buscar (nombre o código): ");
+    var encontrados = servicio.BuscarPorTexto(texto);
+
+    if (encontrados.Count == 0)
+    {
+        Console.WriteLine("No se encontraron productos.");
+        return;
+    }
+    Imprimir(encontrados);
+}
+
+void Eliminar()
+{
+    string codigo = LeerTexto("Código del producto a eliminar: ");
+    var producto = servicio.Buscar(codigo);
+
+    if (producto is null)
+    {
+        Console.WriteLine($"No existe un producto con el código '{codigo}'.");
+        return;
+    }
+
+    string respuesta;
+    while (true)
+    {
+        Console.Write($"¿Seguro que quieres eliminar '{producto.Nombre}'? (s/n): ");
+        respuesta = (Console.ReadLine() ?? "").Trim().ToLower();
+        if (respuesta == "s" || respuesta == "n")
+            break;
+        Console.WriteLine("Responde solo s o n.");
+    }
+
+    if (respuesta == "s")
+    {
+        servicio.Eliminar(producto.Codigo);
+        Console.WriteLine("Producto eliminado.");
+    }
+    else
+    {
+        Console.WriteLine("Eliminación cancelada.");
+    }
 }
 
 void Imprimir(IEnumerable<Producto> productos)
