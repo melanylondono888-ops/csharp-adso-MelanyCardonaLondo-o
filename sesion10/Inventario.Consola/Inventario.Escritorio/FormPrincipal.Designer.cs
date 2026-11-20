@@ -38,6 +38,7 @@
             btnAgregarStock = new Button();
             nudCantidad = new NumericUpDown();
             lblCantidad = new Label();
+            btnReportes = new Button();
             ((System.ComponentModel.ISupportInitialize)dgvProductos).BeginInit();
             ((System.ComponentModel.ISupportInitialize)nudCantidad).BeginInit();
             SuspendLayout();
@@ -54,6 +55,7 @@
             dgvProductos.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dgvProductos.Size = new Size(376, 188);
             dgvProductos.TabIndex = 0;
+            dgvProductos.CellDoubleClick += dgvProductos_CellDoubleClick;
             dgvProductos.DataBindingComplete += dgvProductos_DataBindingComplete;
             // 
             // txtBuscar
@@ -74,7 +76,7 @@
             // 
             // btnAgregar
             // 
-            btnAgregar.Location = new Point(425, 124);
+            btnAgregar.Location = new Point(191, 54);
             btnAgregar.Name = "btnAgregar";
             btnAgregar.Size = new Size(94, 29);
             btnAgregar.TabIndex = 3;
@@ -84,7 +86,7 @@
             // 
             // btnEliminar
             // 
-            btnEliminar.Location = new Point(425, 183);
+            btnEliminar.Location = new Point(306, 56);
             btnEliminar.Name = "btnEliminar";
             btnEliminar.Size = new Size(94, 29);
             btnEliminar.TabIndex = 4;
@@ -139,12 +141,23 @@
             lblCantidad.TabIndex = 9;
             lblCantidad.Text = "Cantidad";
             // 
+            // btnReportes
+            // 
+            btnReportes.Location = new Point(465, 376);
+            btnReportes.Name = "btnReportes";
+            btnReportes.Size = new Size(94, 29);
+            btnReportes.TabIndex = 10;
+            btnReportes.Text = "Reportes";
+            btnReportes.UseVisualStyleBackColor = true;
+            btnReportes.Click += btnReportes_Click;
+            // 
             // FormPrincipal
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.Control;
             ClientSize = new Size(800, 450);
+            Controls.Add(btnReportes);
             Controls.Add(lblCantidad);
             Controls.Add(nudCantidad);
             Controls.Add(btnAgregarStock);
@@ -176,5 +189,6 @@
         private Button btnAgregarStock;
         private NumericUpDown nudCantidad;
         private Label lblCantidad;
+        private Button btnReportes;
     }
 }

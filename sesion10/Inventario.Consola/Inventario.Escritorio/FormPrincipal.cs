@@ -172,5 +172,38 @@ namespace Inventario.Escritorio
             else
                 CargarProductos();
         }
+
+        private void dgvProductos_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return; // evita clics en el encabezado
+
+            if (dgvProductos.Rows[e.RowIndex].DataBoundItem is not Producto producto)
+                return;
+
+            using var form = new FormProducto(producto);
+            if (form.ShowDialog() != DialogResult.OK)
+                return;
+
+            try
+            {
+
+                string nuevoNombre = form.NombreEditado;
+                decimal nuevoPrecio = form.PrecioEditado;
+
+                bool actualizado = _servicio.Actualizar(producto.Codigo, nuevoNombre, nuevoPrecio);
+                if (actualizado)
+                    RefrescarTabla();
+            }
+            catch (ArgumentException ex)
+            {
+                MessageBox.Show(ex.Message, "No se pudo actualizar", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        private void btnReportes_Click(object sender, EventArgs e)
+        {
+            using var formReportes = new FormReportes(_servicio);
+            formReportes.ShowDialog();
+        }
     }
 }

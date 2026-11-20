@@ -81,6 +81,23 @@ namespace Inventario.Servicios
             _productos.Remove(producto);
             _repositorio.Guardar(_productos);
         }
+        public bool Actualizar(string codigo, string nuevoNombre, decimal nuevoPrecio)
+        {
+            var producto = Buscar(codigo);
+            if (producto is null)
+                return false;
+
+            if (string.IsNullOrWhiteSpace(nuevoNombre))
+                throw new ArgumentException("El nombre es obligatorio.");
+
+            if (nuevoPrecio <= 0)
+                throw new ArgumentException("El precio debe ser mayor que cero.");
+
+            producto.Nombre = nuevoNombre.Trim();
+            producto.Precio = nuevoPrecio;
+            _repositorio.Guardar(_productos);
+            return true;
+        }
     }
 
 
